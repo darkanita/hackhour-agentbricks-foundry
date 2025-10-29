@@ -18,8 +18,8 @@ By the end of this lab, you will be able to:
 - 📊 Monitor agent performance through the **Analytics Dashboard**
 
 ## Prerequisites
-- Access to a Databricks workspace (AWS, Azure, or GCP)
-- Databricks Runtime 14.3 LTS or higher
+- Access to a Databricks workspace 
+- Databricks Runtime 14.3 LTS or higher with Serverless Compute enabled
 - PDF documents for your knowledge base (provided in this repo)
 - **No coding experience required!**
 
@@ -55,47 +55,158 @@ When you use the Agent Builder UI, Databricks automatically:
 
 ### 1.1 Log into Databricks
 
-1. Open your web browser and navigate to your Databricks workspace URL
-2. Log in with your credentials
-3. You should see the Databricks workspace home page
+1. Open your web browser and navigate to your Databricks workspace URL (Azure Databricks)
+   - Your URL will look like: `https://adb-[workspace-id].[region].azuredatabricks.net`
+2. Log in with your Microsoft Azure credentials
+3. You should see the Databricks workspace home page with the sidebar navigation on the left
 
 ### 1.2 Navigate to the Agents Interface
 
-1. On the left sidebar, look for one of these options:
-   - **"Generative AI"** → **"Agents"** (newer workspaces)
-   - **"Machine Learning"** → **"Agents"** (some workspaces)
-   - Or search for **"Agents"** in the top search bar
+1. Look at the left sidebar and scroll down to the **"AI/ML"** section
+2. You'll see several options including:
+   - Playground
+   - **Agents** (with a "Beta" badge) ← Click here!
+   - Experiments
+   - Features
+   - Models
+   - Serving
 
-2. Click on **"Agents"** to open the Agents dashboard
-3. You'll see the Agents dashboard with options to create new agents
+3. Click on **"Agents"** to open the Agents dashboard
 
-> 💡 **Can't find Agents?** Make sure your workspace has Databricks Runtime 14.3+ and Generative AI features enabled. Contact your workspace admin if needed.
+![Agents UI Interface](media/agents_ui.png)
 
-### 1.3 Understand the Interface
+4. You'll see the Agents dashboard with options to create new agents
 
-The Agents dashboard shows:
-- **Your existing agents** (if any)
-- **"Create Agent"** button (top right)
-- **Templates** for common agent types
-- **Recent agent activity**
+> 💡 **Note**: The Agents feature may show a "Beta" badge, which is normal. This indicates it's an actively developed feature with the latest capabilities.
+
+### 1.3 Understand the Sidebar Navigation
+
+The left sidebar is organized into sections:
+- **Workspace** - Your notebooks and files
+- **Recents** - Recently accessed items
+- **Catalog** - Unity Catalog for data management
+- **Jobs & Pipelines** - Scheduled workflows
+- **Compute** - Cluster management
+- **Marketplace** - Data sharing
+- **SQL** section - SQL Editor, Queries, Dashboards, etc.
+- **Data Engineering** - Job Runs, Data Ingestion
+- **AI/ML** section - This is where **Agents** lives! ⭐
+
+**✅ Checkpoint**: You should now see the Agents option in the AI/ML section of your sidebar.
+
+### 1.4 Explore the Agents Dashboard
+
+Once you click on **Agents**, you'll see the Agents dashboard with:
+
+**Top Section - "Choose your use case"** with template cards (scroll horizontally to see all):
+
+1. **Information Extraction** (Beta)
+   - Extract key information & insights into structured JSON
+   - Tags: Classification, Sentiment analysis, Entity resolution, Extraction, Summarization
+   - Buttons: "Use PDFs" | "Build"
+
+2. **Knowledge Assistant** (Beta) ← **We'll use this one!**
+   - Turn your docs into an expert AI chatbot
+   - Tags: RAG, Document Q&A
+   - Button: "Build"
+
+3. **AI/BI Genie**
+   - Turn your tables into an expert AI chatbot
+   - Tags: Text-to-SQL, Table Q&A, Structured data Q&A
+   - Button: "Open Genie"
+
+4. **Multi-Agent Supervisor** (Beta)
+   - Design an AI system with Genie, agents, tools
+   - Tags: Tool-calling, Agent orchestration
+   - Button: "Build"
+
+5. **Custom LLM** (Beta)
+   - Specialize an LLM to perform custom text tasks
+   - Tags: Content generation, Code generation, Translation
+   - Buttons: "Use PDFs" | "Build"
+
+6. **Code Your Own Agent**
+   - Build with OSS libraries and Agent Framework
+   - Tags: LangGraph, DSPy, Other OSS agent libraries
+   - Buttons: "Go to docs" | "Import notebook"
+
+> 📌 **Navigation Tip**: Use the left/right arrows (< >) at the top to scroll through all template options.
+
+**Bottom Section** - List of your existing agents (if any) with columns:
+- Name
+- Problem type
+- Endpoint
+- Last modified
+
+> 💡 **For this lab**: We'll click the **"Build"** button on the **Knowledge Assistant** card since we're building a Document Q&A agent!
+
+![Agents UI Build Interface](media/agents_ui_build.png)
 
 ---
 
-## Step 2: Upload Documents Using Unity Catalog Volumes (10 minutes)
+## Step 2: Set Up Unity Catalog and Upload Documents (15 minutes)
 
-> 🎯 **Goal**: Upload your PDF documents to a Unity Catalog Volume using the UI
+> 🎯 **Goal**: Create a schema and volume in Unity Catalog, then upload your PDF documents
+> 
+> ⚠️ **Important**: Complete this step BEFORE building the agent, as you'll need to point the agent to these documents.
 
-### 2.1 Create a Unity Catalog Volume
+### 2.1 Navigate to Catalog
 
 1. In the left sidebar, click on **"Catalog"**
-2. Navigate to your catalog (e.g., `main`) or create a new one
-3. Create or select a schema (e.g., `agent_lab`)
-4. Click on the **"+ Create"** button and select **"Volume"**
-5. Name your volume: `hr_documents_volume`
-6. Select **"External"** or **"Managed"** based on your preference
-7. Click **"Create"**
+2. You'll see the Unity Catalog interface with your catalogs listed
+3. Select the **`main`** catalog (or another catalog you have access to)
 
-### 2.2 Upload PDF Files via UI
+### 2.2 Create a New Schema
+
+A schema is the second layer of Unity Catalog's three-level namespace and organizes tables and views.
+
+1. Inside your catalog, click the **"Create"** button or **"+ Schema"** option
+2. You'll see the **"Create a new schema"** dialog with these fields:
+
+   **Schema name*** (required):
+   - Enter: `agent_lab`
+   - This will be your workspace for the agent project
+
+   **Storage location**:
+   - Leave as default: `wsdb_demos` (or your workspace default)
+   - You can also "Create a new external location" if needed
+   - The full path will be displayed below (e.g., `abfss://unity-catalog-storage@...`)
+
+   **Comment** (optional):
+   - Add a description like: `Schema for agent lab with HR documents`
+   - This helps document your workspace organization
+
+    ![Create Schema UI](media/schema_ui.png)
+
+3. Click the **"Create"** button (blue button, bottom right)
+
+**✅ Checkpoint**: You should now see `agent_lab` schema in your catalog structure
+
+### 2.3 Create a Unity Catalog Volume
+
+Now let's create a volume inside the schema to store your PDF files.
+
+1. Click on your newly created **`agent_lab`** schema
+2. Click the **"Create"** button and select **"Volume"**
+3. Fill in the volume creation form:
+   
+   **Volume name**:
+   - Enter: `hr_documents_volume`
+   
+   **Volume type**:
+   - Select **"Managed"** (Databricks manages the storage)
+   - Or **"External"** if you want to use your own storage location
+   
+   **Comment** (optional):
+   - Enter: `Storage for HR policy PDFs and documents`
+
+    ![Create Volume Dialog](media/volume_ui.png)
+
+4. Click **"Create"**
+
+**✅ Checkpoint**: Your full volume path is now: `main.agent_lab.hr_documents_volume`
+
+### 2.4 Upload PDF Files via UI
 
 1. Click on the newly created volume `hr_documents_volume`
 2. Click the **"Upload Files"** button
@@ -110,309 +221,464 @@ The Agents dashboard shows:
 4. Wait for the upload to complete (you'll see a progress indicator)
 5. Verify all 6 files are uploaded successfully
 
+![Uploaded PDF Files](media/upload_files.png)
+
 **✅ Checkpoint**: You should now see all 6 PDF files listed in your volume
 
----
+## Step 3: Create Your Knowledge Assistant Agent (20 minutes)
 
-## Step 3: Use the Agent Builder Wizard (15 minutes)
-
-> 🎯 **Goal**: Create your Q&A agent using the visual Agent Builder interface
+> 🎯 **Goal**: Configure and create your Q&A agent using the Knowledge Assistant builder
 
 ### 3.1 Start Creating a New Agent
 
-1. Navigate back to **Generative AI** → **Agents**
-2. Click the **"Create Agent"** button (usually in the top-right corner)
-3. You'll see several template options:
-   - **Document Q&A Agent** ← Select this one!
-   - Code Assistant Agent
-   - Custom Agent (blank template)
-4. Click **"Use Template"** or **"Get Started"** on the Document Q&A Agent card
+1. Navigate back to **AI/ML** → **Agents** in the left sidebar
+2. In the "Choose your use case" section at the top, locate the **"Knowledge Assistant"** card
+3. This card shows:
+   - "Turn your docs into an expert AI chatbot"
+   - Tags: **RAG**, **Document Q&A**
+4. Click the **"Build"** button on the Knowledge Assistant card
 
-> 📝 **Why this template?** The Document Q&A template is pre-configured for RAG-based question answering, which is perfect for our HR documents use case.
+> 📝 **Why Knowledge Assistant?** This template is specifically designed for Document Q&A using RAG (Retrieval Augmented Generation), which is perfect for our HR documents use case.
 
-### 3.2 Configure Agent Basic Information
+### 3.2 Fill in Basic Information
 
-In the Agent Builder wizard, fill in:
+You'll see the agent creation form. The page header shows:
+- Agent name with timestamp (auto-generated)
+- **Endpoint: —** (will be created after agent is built)
+- **MLflow experiment: —** (for tracking)
 
-1. **Agent Name**: `HR_QA_Agent`
-2. **Description**: `Answers questions about employee benefits, policies, and company roles`
-3. **Catalog**: Select `main` (or your catalog)
-4. **Schema**: Select `agent_lab` (or your schema)
-5. Click **"Next"**
-
-### 3.3 Configure Document Source
-
-1. **Data Source Type**: Select **"Unity Catalog Volume"**
-2. **Volume Path**: Browse and select your volume:
-   - `main.agent_lab.hr_documents_volume`
-3. **File Types**: Ensure **PDF** is checked
-4. **Auto-sync**: Enable this option to automatically process new files
-5. Click **"Next"**
-
-**💡 Tip**: The system will automatically:
-- Extract text from PDFs
-- Chunk documents intelligently
-- Create embeddings
-- Build a vector search index
-
-### 3.4 Configure Vector Search (Auto-Generated)
-
-The wizard automatically configures:
-
-1. **Vector Search Endpoint**: Creates or uses existing endpoint
-2. **Embedding Model**: `databricks-bge-large-en` (auto-selected)
-3. **Chunk Settings**:
-   - Chunk size: 1000 tokens
-   - Chunk overlap: 200 tokens
-4. **Index Name**: `hr_documents_vs_index` (auto-generated)
-
-Simply review the settings and click **"Next"**
-
-**⏱️ Wait Time**: The system will now process your documents (2-5 minutes). You'll see a progress bar.
+Let's fill out each section:
 
 ---
 
-## Step 4: Configure the Language Model (5 minutes)
+**📋 Overview Section**
 
-> 🎯 **Goal**: Select and configure the AI model that will power your agent's responses
+Read the introduction text:
+> "Knowledge Assistant turns your documents—like PDFs, Word files, and more—into a high-quality Q&A chatbot. It uses advanced AI to deliver accurate, reliable answers from your content with no coding or complex setup required. Ideal for product documentation, customer support knowledge bases, regulatory documents, and more. Agent Bricks may use endpoints hosted on Databricks Inc."
 
-### 4.1 Select Foundation Model
-
-In the Agent Configuration screen:
-
-1. **LLM Provider**: Select **"Databricks Foundation Models"**
-2. **Model**: Choose from dropdown:
-   - **Recommended**: `databricks-meta-llama-3-1-70b-instruct` (best accuracy)
-   - Alternative: `databricks-mixtral-8x7b-instruct` (faster)
-3. **Temperature**: Set to **0.1** (for more factual, less creative responses)
-4. **Max Tokens**: **500** (adjust based on desired response length)
-
-### 4.2 Configure Retrieval Settings
-
-1. **Number of documents to retrieve (K)**: **5**
-2. **Similarity threshold**: **0.7** (only use highly relevant chunks)
-3. **Reranking**: Enable **"Smart Reranking"** (optional, improves relevance)
-
-### 4.3 Set System Prompt (Optional)
-
-Customize the agent's behavior with a system prompt:
-
-```
-You are an HR assistant for the company. Answer questions about employee benefits, 
-policies, and roles based ONLY on the provided documents. If you don't know the 
-answer, say "I don't have that information in the available documents."
-
-Be concise, professional, and helpful. Always cite the source document when possible.
-```
-
-Click **"Create Agent"** to finish!
-
-**✅ Success**: Your agent is now created and ready to test!
+There's also a link to [Documentation & License](https://docs.databricks.com) for more details.
 
 ---
 
-## Step 5: Evaluate Agent Performance (15 minutes)
+**📝 Basic Info Section**
 
-### 5.1 Create Evaluation Dataset
+1. **Name** field (required):
+   - You'll see a pre-filled name like: `knowledge-assistant-2025-10-28-20-31-33`
+   - You can edit this or keep the auto-generated name
+   - **For this lab, enter**: `hr_qa_agent`
+   - Note below field: "Only letters, numbers, and dashes allowed"
+   
+   ![Example: hr_qa_agent]
 
-```python
-# Create evaluation dataset
-eval_data = [
-    {
-        "question": "What health insurance plans does the company offer?",
-        "expected_topics": ["Health Plus", "Standard", "insurance"]
-    },
-    {
-        "question": "How many vacation days do employees get?",
-        "expected_topics": ["vacation", "PTO", "days"]
-    },
-    {
-        "question": "What wellness benefits are included?",
-        "expected_topics": ["wellness", "gym", "health"]
-    },
-    {
-        "question": "What is the company's remote work policy?",
-        "expected_topics": ["remote", "work from home", "policy"]
-    }
-]
+2. **Description** field (optional but highly recommended):
+   - Placeholder text: "Enter description"
+   - Helper text: "Describe what your agent can do. For example: answer questions about HR policy docs"
+   - **Enter**: 
+   ```
+   Answer questions about employee benefits, policies, company roles, health insurance plans, vacation policies, and HR documentation
+   ```
+   
+   > 💡 **Why this matters**: A good description helps users understand the agent's purpose and capabilities.
 
-eval_df = pd.DataFrame(eval_data)
-print("Evaluation dataset created:")
-display(eval_df)
+---
+
+**🗂️ Configure Knowledge Sources Section**
+
+Header text: "Select up to 10 different knowledge sources to use in your knowledge assistant."
+
+After you add a source, you'll see a card labeled with a folder icon (📁) and your source name (e.g., **"HR_Documents"**).
+
+**Fill in the three main fields:**
+
+1. **Type** dropdown:
+   - Click the dropdown (shows "UC Files" by default)
+   - Options available:
+     - **UC Files** ← Select this for our PDFs
+     - UC Tables
+     - Other source types
+   - Keep it as: **"UC Files"**
+
+2. **Source** field:
+   - This field shows: "Select source..."
+   - Click the **folder icon** (📁) button on the right
+   - A file browser dialog will open
+   - Navigate through: `main` → `agent_lab` → `hr_documents_volume`
+   - Select the **`hr_documents_volume`** 
+   - The full path will appear: `/Volumes/wsdb_demos/agent_lab/hr_documents_volume/`
+   
+   ![Example path shown in interface]
+
+3. **Name** field (optional but recommended):
+   - This is an identifier for this knowledge source
+   - **Enter**: `HR_Documents`
+   - This label appears on the source card and helps you track multiple sources
+
+**Describe the content** (large text area below):
+
+This is a critical field! The helper text says:
+> "Try to describe in as much detail as possible what content is in the knowledge source. The agent will use it to understand when to use this data source."
+
+**Enter a detailed description** (use the example below or customize):
+```
+This knowledge source contains comprehensive HR documentation including:
+- Employee benefits information (health insurance plans: Health Plus and Standard)
+- Vacation and PTO policies
+- Wellness programs and PerksPlus benefits
+- Employee handbook with company policies and procedures
+- Role library with job descriptions and company positions
+- Northwind company benefits details and options
+
+Use this source to answer employee questions about benefits, policies, time off, health insurance, wellness programs, and available roles.
 ```
 
-### 5.2 Run Agent Evaluation
-
-```python
-from databricks import agents
-
-# Evaluate the agent
-evaluation_results = agents.evaluate(
----
-
-## Step 5: Test Your Agent in the Playground (15 minutes)
-
-> 🎯 **Goal**: Test your agent's responses using the built-in chat playground
-
-### 5.1 Open the Agent Playground
-
-After creation, you'll automatically be taken to the **Agent Playground**:
-
-1. You'll see a chat interface on the right
-2. Agent configuration details on the left
-3. A test panel in the middle
-
-### 5.2 Ask Test Questions
-
-Try these sample questions in the chat interface:
-
-1. **Question 1**: `What health insurance options are available?`
-   - Review the response
-   - Check if it mentions Health Plus and Standard plans
-
----
-
-## Step 6: Evaluate and Improve (10 minutes)
-
-> 🎯 **Goal**: Measure your agent's performance and make improvements using the UI
-
-### 6.1 Run Automated Evaluation
-
-1. In the Agent Playground, click **"Evaluate"** tab at the top
-2. Click **"Create Evaluation Set"**
-3. Add your test questions:
-
-| Question | Expected Answer Type |
-|----------|---------------------|
-| What health insurance plans does the company offer? | Should mention Health Plus and Standard |
-| How many vacation days do employees get? | Should specify PTO days |
-| What wellness benefits are included? | Should list wellness programs |
-| What is the company's remote work policy? | Should explain remote work rules |
-
-4. Click **"Run Evaluation"**
-5. Review the results:
-   - **Relevance Score**: How relevant is the answer?
-   - **Groundedness Score**: Is it based on the documents?
-   - **Completeness Score**: Did it answer fully?
-
-### 6.2 Analyze Performance Metrics
-
-1. View the **Metrics Dashboard**:
-   - Average response time
-   - Retrieval accuracy
-   - User satisfaction (from thumbs up/down)
-
-2. Click on **"View Traces"** to see:
-   - Which documents were retrieved for each question
-   - The reasoning chain
-   - Token usage and costs
-
-### 6.3 Improve Agent Performance
-
-If scores are low, try these adjustments:
-
-1. **Adjust Retrieval Settings**:
-   - Increase K (retrieve more documents)
-   - Lower similarity threshold
-   - Enable reranking
-
-2. **Refine System Prompt**:
-   - Add more specific instructions
-   - Include examples of good responses
-
-3. **Process More Documents**:
-   - Add more PDFs to the volume
-   - The agent will auto-sync
-
-**Click "Save" after making changes**
-```python
-# Create a review app for stakeholder feedback
-review_app = agents.create_review_app(
-    agent=agent,
-    app_name="HR Q&A Agent Review"
-)
-
-print(f"Review app created! Share this URL with stakeholders:")
-print(review_app.url)
+Or use this shorter version from the screenshot example:
+```
+This knowledge source contains comprehensive HR documentation including:
+- Employee benefits information (health insurance plans: Health Plus and Standard)
+- Vacation and PTO policies
+- Wellness programs and PerksPlus benefits
+- Employee handbook with company policies and procedures
 ```
 
-### 7.2 Collect Feedback
-
-The review app allows users to:
-- Ask questions to the agent
-- Rate responses (👍 or 👎)
-- Provide written feedback
-- Flag incorrect or problematic responses
+> ⚠️ **Important**: The quality of this description directly impacts how well the agent retrieves relevant information! Be specific about the types of questions this source can answer.
 
 ---
 
-## Lab Summary
+**➕ Adding Additional Sources (Optional)**
 
-Congratulations! You have successfully:
-✅ Set up a Databricks environment for Agent Bricks
-✅ Processed and indexed PDF documents in a vector store
-✅ Created an intelligent Q&A agent using RAG
-✅ Evaluated agent performance
-✅ Deployed the agent to a serving endpoint
----
+- Below the knowledge source card, you'll see a **"+ Add"** button
+- Click this to add more knowledge sources (up to 10 total)
+- You might add:
+  - Additional volumes with different document types
+  - Unity Catalog tables with structured data
+  - Other file repositories
 
-## Step 7: Deploy to Production (5 minutes)
-
-> 🎯 **Goal**: Deploy your agent to a production endpoint with one click
-
-### 7.1 One-Click Deployment
-
-1. In the Agent interface, click the **"Deploy"** button (top right)
-2. Configure deployment settings:
-   - **Endpoint Name**: `hr-qa-agent-prod`
-   - **Compute Size**: Select **Small** (sufficient for testing)
-   - **Scale to Zero**: Enable (saves costs when idle)
-   - **Enable Authentication**: Check this for security
-
-3. Click **"Deploy"**
-4. Wait for deployment (2-3 minutes)
-
-**✅ Status**: You'll see "Endpoint Ready" when complete
-
-### 7.2 Get API Endpoint
+For this lab, one source with all 6 PDFs is sufficient.
 
 ---
 
-## Step 8: Monitor and Maintain (Ongoing)
+**⚙️ Optional Settings Section**
 
-> 🎯 **Goal**: Use the Analytics UI to monitor usage and continuously improve your agent
+At the bottom, you'll see an **"Optional"** section with a down arrow (▼). Click to expand it.
 
-### 8.1 View Usage Analytics
+**Instructions (optional)** field:
+- Placeholder: "Enter instructions"
+- Helper text: "Provide guidelines for how the agent should respond (format, tone, etc.)"
+- **Example you can enter**:
+```
+Provide clear, concise answers based on the HR documentation. 
+Be professional and friendly in tone.
+If you don't find the answer in the documents, say "I don't have that information in the available HR documentation."
+Always cite the source document when answering.
+```
 
-1. Navigate to your agent in the Agents dashboard
-2. Click **"Analytics"** tab
-3. Review metrics:
-   - Total queries per day
-   - Average response time
-   - User satisfaction rate
-   - Most common questions
-   - Failed queries
+**For this lab**: You can leave Optional settings collapsed or just add Instructions if you want to customize the agent's behavior. The defaults are well-optimized for document Q&A.
 
-### 8.2 Review User Feedback
 
-1. Click **"Feedback"** tab
-2. Filter by:
-   - 👎 Negative feedback (prioritize these!)
-   - Questions with low confidence scores
-   - Queries that returned no results
+![Basic Info Section](media/basic_info_agent.png)
 
-3. Use feedback to:
-   - Identify missing information in documents
-   - Improve system prompts
-   - Add new documents
+---
 
-### 8.3 Update Documents
+### 3.3 Create the Agent
 
-To add new documents:
-1. Navigate to your Unity Catalog volume
-2. Upload new PDFs
-3. The agent will **automatically re-index** (if auto-sync enabled)
-4. No code or configuration changes needed!
+**Final Review Checklist**:
+- ✅ Name is filled: `hr_qa_agent`
+- ✅ Description explains the agent's purpose
+- ✅ Knowledge source Type: **UC Files**
+- ✅ Source path selected: `main.agent_lab.hr_documents_volume`
+- ✅ Name (identifier): `HR_Documents`
+- ✅ Content description is detailed and specific
+
+**Create the Agent**:
+
+1. At the bottom of the form, you'll see two buttons:
+   - **Cancel** (left, gray button)
+   - **Create Agent** (right, blue button)
+
+2. Click **"Create Agent"**
+
+3. **Processing begins** (this takes 1-3 minutes):
+   - Databricks validates your configuration
+   - Extracts text from all 6 PDF files
+   - Chunks documents into searchable segments
+   - Generates embeddings using foundation models
+   - Creates a vector search index
+   - Sets up the RAG pipeline
+   - Configures the endpoint
+
+4. You'll see a progress indicator or loading screen
+
+**✅ Success!** 
+
+Once complete, you'll be automatically redirected to your agent's main page where you can:
+- Test the agent in the playground
+- View configuration details
+- See the endpoint information
+- Start asking questions!
+
+
+![Testing Agent Interface](media/test_agent.png)
+
+> ⚠️ **First-time creation note**: The initial setup may take up to 15 minutes as Databricks provisions resources, creates the vector index, and optimizes the RAG pipeline.
+
+
+> ⏱️ **Wait Time**: Initial agent creation typically takes 1-3 minutes. Grab a coffee! ☕
+
+> 💡 **What just happened?** Databricks automatically built an entire RAG (Retrieval Augmented Generation) system with:
+> - Vector database with your documents
+> - Embedding model for semantic search
+> - LLM for generating answers
+> - Orchestration layer to tie it all together
+> - All without writing a single line of code!
+
+---
+
+## Step 4: Test Your Agent and Improve Quality (30 minutes)
+
+> 🎯 **Goal**: Test your agent, then use the "Improve Quality" feature to optimize responses
+
+### 4.1 Understanding the Agent Page
+
+Once your agent is created, you'll see the agent detail page with several sections:
+
+**Top Header**:
+- Agent name: `hr_qa_agent`
+- **Endpoint**: `ka-c727bcdb-endpoint` (your serving endpoint)
+- **MLflow experiment**: `ka-c727bcdb-dev-experiment` (experiment tracking link)
+- Action buttons: 
+  - **Configure** (edit agent settings)
+  - **Improve Quality** (optimize with evaluation data)
+  - **Test your Agent** (chat interface)
+  - **Open in Playground** (full-screen testing)
+
+**Left Panel - Configuration Details**:
+- **Basic Info** section (editable):
+  - Name: `hr_qa_agent`
+  - Description with your agent's purpose
+- **Configure Knowledge Sources**:
+  - Shows your `HR_Documents` source
+  - **Status**: ✅ "Sync successful"
+  - **Last sync**: Timestamp (e.g., "Oct 28, 2025 08:40:29 PM")
+  - Full description of content
+  - **🔄 Sync** button to refresh
+- **Optional** settings (expandable)
+
+**Right Panel - Testing Interface**:
+- Interactive chat to test your agent
+- Retrieved document preview
+- Response quality indicators
+
+### 4.2 Test with Sample Questions
+
+Click **"Test your Agent"** or use the chat interface on the right. Try these questions:
+
+**Test Question 1:**
+```
+What does the Northwind Health Plus benefits plan cover?
+```
+Expected: Medical, dental, vision care, prescription drugs, mental health services
+
+**Test Question 2:**
+```
+What is the procedure for taking maternity leave?
+```
+Expected: Notify HR 30 days before, provide medical documentation
+
+**Test Question 3:**
+```
+What does the PerksPlus program include?
+```
+Expected: Gym discounts, wellness memberships, food vouchers, financial support
+
+**Test Question 4:**
+```
+What are the responsibilities of a data analyst according to the role library?
+```
+Expected: Data collection, cleaning, analysis, strategic business reports
+
+**Test Question 5:**
+```
+What are Northwind's standard benefits?
+```
+Expected: Basic medical insurance, paid vacation, 401(k) retirement plan
+
+> 📝 **Note**: As you ask questions, the agent retrieves relevant document chunks and displays them in the right panel.
+
+### 4.3 Observe the Response Quality Banner
+
+After testing a few questions, you'll see a banner appear at the bottom of the interface:
+
+**"Want to further improve response quality?"**
+
+💡 Banner message:
+> "Try collecting labeled data for your agent to improve quality. We will retrain and auto-optimize your agent from new data."
+
+You have two options:
+- **Dismiss** - Close the banner
+- **Improve quality >** - Start the optimization process ← Click this!
+
+### 4.4 Access the Improve Quality Feature
+
+Click **"Improve quality >"** (or the **"Improve Quality"** button in the top header)
+
+This opens the quality improvement interface where you can:
+1. Add labeled evaluation examples
+2. Run quality assessments
+3. Auto-optimize your agent based on results
+
+### 4.5 Create Evaluation Dataset
+
+In the Improve Quality interface, you'll see:
+- **Guidelines** column (left) - Instructions and tips
+- **Feedback records** column (right) - Your evaluation questions
+- Action buttons: **Export**, **Import**, **+ Add**
+
+**The Process**:
+1. You add questions (not answers initially)
+2. Databricks runs your agent against those questions
+3. You then label/review the responses
+4. The system uses this labeled data to optimize
+
+**Why this matters**:
+- Helps Databricks understand your use case better
+- Optimizes retrieval parameters automatically
+- Improves answer accuracy and relevance
+- Calibrates the model to your specific documents
+
+### 4.5.1 Add Evaluation Questions
+
+Click the **"+ Add"** button (blue button, top right). You'll see the **"Add a question"** dialog.
+
+**For each question:**
+1. In the text field "Enter the question", type your question
+2. Click **"Add"** button
+3. Repeat for all test questions
+
+**Add these 5 evaluation questions one by one:**
+
+**Question 1:**
+```
+What does the Northwind Health Plus benefits plan cover?
+```
+
+**Question 2:**
+```
+What is the procedure for taking maternity leave?
+```
+
+**Question 3:**
+```
+What does the PerksPlus program include?
+```
+
+**Question 4:**
+```
+What are the responsibilities of a data analyst according to the role library?
+```
+
+**Question 5:**
+```
+What are Northwind's standard benefits?
+```
+
+> 💡 **Note**: You only enter questions at this stage. The agent will generate answers, and then you'll label them in the next step.
+
+### 4.5.2 Start a Labeling Session
+
+After adding your questions:
+
+1. On the right side, you'll see **"Get expert feedback"** section
+2. Message: "You can send questions to experts for review to help build a high-quality labeled dataset. First, add questions to enable labeling."
+3. Click the **"Start labeling session"** button (blue button)
+
+**What happens next**:
+1. Databricks runs your agent against all the questions you added
+2. Generates responses for each question
+3. You'll be able to review and label each response as:
+   - ✅ **Good** - Accurate and complete answer
+   - ⚠️ **Needs improvement** - Partially correct
+   - ❌ **Poor** - Incorrect or irrelevant
+4. You can also edit the expected answer or provide feedback
+
+> 💡 **Best Practice**: Add 10-20 diverse examples covering different topics and document types for best results. For this lab, 5 examples are sufficient to see improvement.
+
+### 4.6 Run Quality Evaluation and Label Responses
+
+Once you start the labeling session:
+
+1. **Agent generates responses**: Databricks will run your agent against each question you added
+
+2. **Review the Evaluation Table**: You'll see a table with columns:
+   - **Inputs**: Your questions
+   - **Expectations**: A JSON structure showing what you expect (guidelines and expected answer)
+   - **Last Updated**: Timestamp
+   - **Source**: Where the question came from
+   - **Tags**: Optional labels
+
+**Understanding the Expectations Format**:
+
+The expectations are stored in JSON format like this:
+```json
+{
+  "guidelines": [
+    "The Northwind Health Plus plan covers medical, dental, and vision care, prescription drugs, and mental health services."
+  ]
+}
+```
+
+This format allows Databricks to compare the agent's actual response against your expected answer.
+
+3. **Review each response**:
+   - The system will show the agent's actual answer
+   - You can compare it to your expected answer in the guidelines
+   - ✅ Click **thumbs up** if the answer matches expectations
+   - ❌ Click **thumbs down** if the answer is incorrect or incomplete
+   - 📝 Add comments or corrections
+   - ✏️ Edit the expected answer if needed
+
+4. **For our 5 questions, the system should have these expectations configured**:
+
+   **Q1: What does the Northwind Health Plus benefits plan cover?**
+   - Expected: `The Northwind Health Plus plan covers medical, dental, and vision care, prescription drugs, and mental health services.`
+   
+   **Q2: What is the procedure for taking maternity leave?**
+   - Expected: `You must notify Human Resources at least 30 days before the expected date and provide the corresponding medical documentation.`
+   
+   **Q3: What does the PerksPlus program include?**
+   - Expected: `PerksPlus includes discounts on gyms, wellness memberships, food vouchers, and financial support.`
+   
+   **Q4: What are the responsibilities of a data analyst according to the role library?**
+   - Expected: `According to the Role Library, a data analyst is responsible for collecting, cleaning, and analyzing data to generate strategic business reports.`
+   
+   **Q5: What are Northwind's standard benefits?**
+   - Expected: `Standard benefits include basic medical insurance, paid vacation, and a 401(k) retirement plan.`
+
+5. **Review and run evaluation**: 
+   - Click the **"Columns"** dropdown to customize what you see
+   - Use the search bar to filter specific questions
+   - Click the refresh button (🔄) to reload data
+   - When ready, look for an **"Evaluate"** or **"Run"** button to start the evaluation
+
+6. **Save your changes**: Click **"Save changes"** button (top right) to preserve your evaluation dataset
+
+**Databricks will automatically**:
+   - Compare actual responses to your expected answers in the guidelines
+   - Calculate similarity and relevance scores
+   - Identify which documents were retrieved
+   - Measure response quality metrics
+
+7. **Review the evaluation results** (after running evaluation):
+   - ✅ **Pass** - Response matches expected answer well
+   - ⚠️ **Partial** - Response is somewhat accurate
+   - ❌ **Fail** - Response doesn't match or is incorrect
+   - **Similarity Score** - Numerical score (0-1)
+   - **Retrieved Docs** - Which source documents were used
+
+> 💡 **Tip**: You can also **Export** your evaluation dataset to save it locally or **Import** existing evaluation data using the buttons at the top.
+
+**✅ Checkpoint**: Your agent should now provide high-quality, accurate answers to HR-related questions!
+
+> 🎓 **What you learned**: The "Improve Quality" feature with labeling sessions uses your evaluation data to automatically tune dozens of parameters behind the scenes, turning your good agent into a great one!
 
 ---
 
@@ -425,9 +691,6 @@ To add new documents:
 ✅ Created a Q&A agent using the visual Agent Builder
 ✅ Configured vector search and embeddings automatically
 ✅ Tested and evaluated agent responses in the Playground
-✅ Deployed the agent to a production endpoint
-✅ Created a review app for stakeholder feedback
-✅ Set up monitoring and analytics
 
 ### Key Takeaways:
 - **No coding required**: Everything done through Databricks UI
@@ -435,135 +698,6 @@ To add new documents:
 - **One-click deployment**: From testing to production in minutes
 - **Built-in evaluation**: Metrics and feedback collection included
 - **Easy maintenance**: Add new documents without rebuilding
-
-## Next Steps
-
-### Immediate Actions:
-1. **Share with stakeholders**: Send the review app link to HR team
-2. **Collect feedback**: Monitor initial usage and ratings
-3. **Add more documents**: Upload additional PDFs as needed
-
-### Advanced Enhancements:
-1. **Fine-tune responses**: Adjust system prompt based on feedback
-2. **Add guardrails**: Configure content filters for sensitive topics
-3. **Integrate with apps**: Use API endpoint in Slack, Teams, or web apps
-4. **Create custom UI**: Build a branded interface using the API
-5. **Add conversation memory**: Enable multi-turn conversations
-
-### Optimization Tips:
-- **Chunk size**: Experiment with 800-1500 tokens for different document types
-- **Model selection**: Try different foundation models for speed vs. accuracy
-- **Retrieval tuning**: Adjust K and similarity threshold based on use case
-- **Cost optimization**: Enable scale-to-zero for development endpoints
-1. Click **"Share"** button in the Agent interface
-2. Enable **"Create Review App"**
-3. Configure access:
-   - Add email addresses of stakeholders
-   - Set permissions (view/test only)
-4. Click **"Generate Shareable Link"**
-
-**Share this link** with HR team members to test the agent!
-
-The review app provides:
-- ✅ Clean chat interface (no technical details)
-- ✅ Feedback collection (thumbs up/down)
-- ✅ Usage analytics
-- ✅ No code or configuration visiblelong
-- **Solution**: Check endpoint status in the Serving UI
-- **Solution**: Ensure model is properly registered
-
-**Issue**: Out of memory errors
-- **Solution**: Use a larger cluster size
-- **Solution**: Process documents in smaller batches
-
-## Resources
-
-### Databricks Documentation
-- [Agent Builder Guide](https://docs.databricks.com/en/generative-ai/agent-builder.html)
-- [Unity Catalog Volumes](https://docs.databricks.com/en/volumes/index.html)
-- [Vector Search Overview](https://docs.databricks.com/en/generative-ai/vector-search.html)
-- [Foundation Models](https://docs.databricks.com/en/machine-learning/foundation-models/index.html)
-
-### Video Tutorials
-- [Getting Started with Agent Builder (YouTube)](https://www.youtube.com/databricks)
-- [Building RAG Applications Without Code](https://www.youtube.com/databricks)
-
-### Community
-- [Databricks Community Forums](https://community.databricks.com/)
-- [Databricks Academy](https://www.databricks.com/learn/training)
-
-## Appendix: Using the API (Optional)
-
-If you want to integrate your agent into an application, here's a simple example:
-
-### Python Example
-```python
-import requests
-import os
-
-# Configuration
-endpoint_url = "https://<workspace-url>/serving-endpoints/hr-qa-agent-prod/invocations"
-token = os.environ.get("DATABRICKS_TOKEN")
-
-# Ask a question
-def ask_agent(question):
-    headers = {
-        "Authorization": f"Bearer {token}",
-        "Content-Type": "application/json"
-    }
-    
-    data = {
-        "messages": [
-            {"role": "user", "content": question}
-        ]
-    }
-    
-    response = requests.post(endpoint_url, headers=headers, json=data)
-    return response.json()
-
-# Example usage
-answer = ask_agent("What health insurance options are available?")
-print(answer)
-```
-
-### JavaScript/Node.js Example
-```javascript
-const axios = require('axios');
-
-const endpointUrl = 'https://<workspace-url>/serving-endpoints/hr-qa-agent-prod/invocations';
-const token = process.env.DATABRICKS_TOKEN;
-
-async function askAgent(question) {
-    const response = await axios.post(
-        endpointUrl,
-        {
-            messages: [
-                { role: 'user', content: question }
-            ]
-        },
-        {
-            headers: {
-                'Authorization': `Bearer ${token}`,
-                'Content-Type': 'application/json'
-            }
-        }
-    );
-    return response.data;
-}
-
-// Example usage
-askAgent('What are the vacation policies?')
-    .then(answer => console.log(answer));
-```
-
----
-
-## Questions or Feedback?
-
-If you encounter any issues or have suggestions for improving this lab:
-- 💬 Ask in the workshop chat
-- 📧 Email your instructor
-- 🐛 Create an issue in the GitHub repository
 
 ---
 
