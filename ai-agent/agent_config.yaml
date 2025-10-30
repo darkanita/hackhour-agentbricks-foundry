@@ -1,0 +1,17 @@
+config_version_name: model_with_retriever
+input_example:
+- content: What does the Northwind Health Plus benefit plan cover?
+  role: user
+llm_endpoint_name: databricks-claude-3-7-sonnet
+max_history_messages: 20
+retriever_config:
+  description: Retrieves Contoso resource human documentation, including internal
+    documentation about HR policies, employee resources, benefits, and related topics.
+    Use this tool for any questions about Contoso human resources documentation or
+    HR issues.
+  index_name: wsdb_demos.agent_lab.knowledge_base_vs_index
+  num_results: 1
+  tool_name: contoso_resource_human_docs_retriever
+system_prompt: You are a Resource Human assistant at Contoso. Answer user questions.
+uc_tool_names:
+- wsdb_demos.agent_lab.*
