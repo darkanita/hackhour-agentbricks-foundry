@@ -39,30 +39,42 @@ Build intelligent Q&A agents powered by Databricks AI that can:
 
 ---
 
-### Lab 2: Pro-Code Agent Development (Coming Soon) 💻
+### Lab 2: Pro-Code Agent Development 💻
 
-**File:** `Lab2_Advanced_Agent_Development.md` *(Work in Progress)*
+**File:** [`Lab2_ProCode_Agent_with_Databricks.ipynb`](./Lab2_ProCode_Agent_with_Databricks.ipynb)
 
-**Perfect for:** Data scientists, ML engineers, and developers who want full control and customization.
+**Perfect for:** Data scientists, ML engineers, and developers who want full programmatic control and customization.
 
-**What you'll build:** A customized agent with advanced features like custom tools, complex RAG pipelines, and API integrations.
+**What you'll build:** A production-ready HR Q&A agent using Python, LangGraph, and Databricks SDK with complete deployment pipeline.
 
 **Key Features:**
-- ✅ Python SDK for agent creation
-- ✅ Custom document processing pipelines
-- ✅ Advanced retrieval strategies
-- ✅ Custom tool integration
-- ✅ Fine-tuning and optimization
-- ✅ CI/CD deployment workflows
+- ✅ Python SDK and LangGraph for full control
+- ✅ Custom HRAgent class with ResponsesAgent protocol
+- ✅ LangGraph workflow orchestration
+- ✅ Vector Search integration for RAG
+- ✅ MLflow tracking and model registry
+- ✅ REST API deployment to Model Serving
+- ✅ Streaming response support
+- ✅ Multi-turn conversation handling
+- ✅ Batch evaluation framework
 
 **Time to complete:** 2-3 hours
 
 **What you'll use:**
 - Databricks Python SDK
-- LangChain / LlamaIndex
-- MLflow for tracking
-- Custom vector search configurations
-- Advanced prompt engineering
+- LangGraph for agent workflow
+- LangChain core components
+- MLflow for experiment tracking
+- Unity Catalog for model governance
+- Databricks Model Serving
+- Vector Search API
+
+**What you'll learn:**
+- Build custom agent classes
+- Create state graphs with LangGraph
+- Implement retrieval-augmented generation
+- Deploy agents as REST APIs
+- Monitor and evaluate agent performance
 
 ---
 
@@ -73,7 +85,7 @@ Build intelligent Q&A agents powered by Databricks AI that can:
 Before starting any lab, ensure you have:
 
 1. **Databricks Workspace Access**
-   - Azure Databricks workspace (or AWS/GCP)
+   - Azure Databricks workspace
    - Compute resources enabled
    - Unity Catalog enabled
 
@@ -96,10 +108,11 @@ Before starting any lab, ensure you have:
 - Visual tools and templates
 
 #### 💻 **I need advanced customization and control**
-→ Start with **Lab 2: Pro-Code Agent Development** *(Coming Soon)*
+→ Start with **Lab 2: Pro-Code Agent Development**
 - Full programmatic control
-- Custom integrations
-- Advanced ML workflows
+- Custom agent workflows
+- Advanced ML integration
+- Production-grade deployment
 
 #### 🔄 **I want both!**
 → Start with Lab 1 to understand the concepts, then move to Lab 2 for advanced features
@@ -111,17 +124,38 @@ Before starting any lab, ensure you have:
 ```
 hackhour-agentbricks-foundry/
 │
-├── README.md                              # This file
-├── Lab1_QA_Agent_with_Databricks.md      # Low-code agent creation guide
-├── Lab2_Advanced_Agent_Development.md    # Pro-code guide (coming soon)
+├── README.md                                      # This file
+├── Lab1_QA_Agent_with_Databricks.md              # Low-code agent creation guide
+├── Lab2_ProCode_Agent_with_Databricks.ipynb      # Pro-code notebook guide
 │
-└── data/                                  # Sample documents
-    ├── employee_handbook.pdf
-    ├── Benefit_Options.pdf
-    ├── Northwind_Health_Plus_Benefits_Details.pdf
-    ├── Northwind_Standard_Benefits_Details.pdf
-    ├── PerksPlus.pdf
-    └── role_library.pdf
+├── ai-agent/                                      # Pro-code agent implementation
+│   ├── agent.py                                  # Advanced agent class
+│   └── agent_config.yaml                         # Agent configuration
+│
+├── chatbot_app/                                   # Chatbot application files
+│   ├── app.yaml                                  # App configuration
+│   ├── main.py                                   # Chatbot main application
+│   └── requirements.txt                          # Python dependencies
+│
+├── data/                                          # Sample HR documents
+│   ├── employee_handbook.pdf
+│   ├── Benefit_Options.pdf
+│   ├── Northwind_Health_Plus_Benefits_Details.pdf
+│   ├── Northwind_Standard_Benefits_Details.pdf
+│   ├── PerksPlus.pdf
+│   └── role_library.pdf
+│
+├── media/                                         # Screenshots and images for labs
+│   ├── agents_ui.png
+│   ├── agents_ui_build.png
+│   ├── basic_info_agent.png
+│   ├── schema_ui.png
+│   ├── test_agent.png
+│   ├── upload_files.png
+│   └── volume_ui.png
+│
+└── resources/                                     # Additional utilities
+    └── utils.ipynb                               # Helper notebook
 ```
 
 ---
@@ -144,11 +178,14 @@ By completing these labs, you will:
 - ✅ Share agents with stakeholders
 
 ### Pro-Code Path (Lab 2)
-- ✅ Use Databricks Python SDK
-- ✅ Customize document processing
-- ✅ Implement advanced retrieval strategies
-- ✅ Build custom tools and integrations
-- ✅ Optimize for performance and cost
+- ✅ Build custom agent classes with Python
+- ✅ Use LangGraph for workflow orchestration
+- ✅ Implement streaming responses
+- ✅ Deploy agents with MLflow and Model Serving
+- ✅ Create REST API endpoints
+- ✅ Monitor production agents
+- ✅ Implement batch evaluation
+- ✅ Handle multi-turn conversations
 
 ---
 
@@ -197,6 +234,9 @@ These labs can be adapted for various domains:
 - **LLM** - Meta Llama 3.1 70B Instruct (or your choice)
 - **RAG Pipeline** - Automatic chunking and retrieval
 - **Evaluation** - Built-in quality metrics
+- **LangGraph** - Agent workflow orchestration
+- **LangChain** - Core agent components
+- **MLflow** - Experiment tracking and model registry
 
 ### Data Management
 - **Unity Catalog Volumes** - Document storage
